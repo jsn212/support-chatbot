@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Support Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --bg-panel:  #13161d;
+      --bg-input:  #1a1d26;
+      --bg-user:   #1e2230;
+      --bg-asst:   #13161d;
+      --border:    #22263a;
+      --border-hi: #3d4460;
+      --accent:    #6b8afd;
+      --accent-dim:#2a3460;
+      --text-pri:  #e8eaf2;
+      --text-sec:  #7880a0;
+      --text-dim:  #3a3f55;
+      --green:     #34d399;
+      --red:       #f87171;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text-pri);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      padding: 0 32px;
+      height: 58px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--bg-panel);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+      color: var(--text-pri);
+      letter-spacing: 0.01em;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-sec);
+      font-weight: 400;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* ── Layout ── */
+    .layout {
+      flex: 1;
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      padding: 0 20px;
+      overflow: hidden;
+    }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      padding: 40px 20px;
+      animation: fadein 0.5s ease;
+    }
+
+    .empty-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .empty-icon svg { opacity: 0.4; }
+
+    .empty-state h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-pri);
+      letter-spacing: 0.01em;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-sec);
+      line-height: 1.7;
+      max-width: 380px;
+    }
+
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-sec);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ── Message bubbles ── */
+    .msg {
+      display: flex;
+      flex-direction: column;
+      animation: fadein 0.25s ease;
+    }
+
+    @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .msg.user { align-items: flex-end; }
+    .msg.assistant { align-items: flex-start; }
+    .msg.system-msg { align-items: center; }
+
+    .bubble {
+      max-width: 82%;
+      padding: 13px 17px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .msg.user .bubble {
+      background: var(--bg-user);
+      border: 1px solid var(--border);
+      border-bottom-right-radius: 4px;
+      color: var(--text-pri);
+    }
+
+    .msg.assistant .bubble {
+      background: var(--bg-asst);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      color: var(--text-pri);
+      white-space: pre-wrap;
+    }
+
+    .msg.system-msg .bubble {
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding: 4px 0;
+    }
+
+    .msg.error-msg .bubble {
+      background: #1a0a0a;
+      border: 1px solid #3f1010;
+      color: var(--red);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    /* Role label */
+    .role-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 5px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Typing indicator ── */
+    .typing-bubble {
+      background: var(--bg-asst);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex; gap: 5px; align-items: center;
+    }
+
+    .typing-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      animation: tdot 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tdot { 0%,60%,100%{transform:translateY(0);opacity:.3} 30%{transform:translateY(-4px);opacity:1} }
+
+    /* ── Input area ── */
+    .input-wrap {
+      padding: 16px 0 24px;
+      flex-shrink: 0;
+    }
+
+    .input-box {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 10px 10px 16px;
+      transition: border-color 0.2s;
+    }
+
+    .input-box:focus-within {
+      border-color: var(--border-hi);
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-pri);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: none;
+      max-height: 140px;
+      overflow-y: auto;
+      padding: 2px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    textarea::placeholder { color: var(--text-dim); }
+
+    #send-btn {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+
+    #send-btn:hover:not(:disabled) { background: #839ffe; transform: scale(1.04); }
+    #send-btn:disabled { background: var(--accent-dim); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+    .input-hint {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Support<span>.</span></div>
+  <div class="status-dot"><div class="dot"></div> Online</div>
+</header>
+
+<div class="layout">
+  <div id="messages">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <h2>How can I help you?</h2>
+      <p>Ask me anything — I'll find the answer from the knowledge base.</p>
+      <div class="suggestion-chips" id="chips">
+        <div class="chip" onclick="useChip(this)">How do I get started?</div>
+        <div class="chip" onclick="useChip(this)">Troubleshoot a common issue</div>
+        <div class="chip" onclick="useChip(this)">What are the system requirements?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <div class="input-box">
+      <textarea id="input" placeholder="Ask a question…" rows="1"></textarea>
+      <button id="send-btn" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG — replace with your deployed Worker URL ─────────────────────
+  const WORKER_URL = "https://doc-chatbot.nieuwenhuisjeremy.workers.dev/chat";
+  // ───────────────────────────────────────────────────────────────────────
+
+  const messagesEl = document.getElementById("messages");
+  const inputEl    = document.getElementById("input");
+  const sendBtn    = document.getElementById("send-btn");
+  const emptyState = document.getElementById("empty-state");
+
+  let history = [];
+  let isLoading = false;
+
+  // ── Suggestion chips ──
+  function useChip(el) {
+    inputEl.value = el.textContent;
+    inputEl.dispatchEvent(new Event("input"));
+    send();
+  }
+
+  // ── Auto-resize textarea ──
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + "px";
+    sendBtn.disabled = !inputEl.value.trim() || isLoading;
+  });
+
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  sendBtn.addEventListener("click", send);
+
+  // ── Render helpers ──
+  function hideEmpty() {
+    if (emptyState) emptyState.style.display = "none";
+  }
+
+  function addMsg(role, text) {
+    hideEmpty();
+    const wrap = document.createElement("div");
+    wrap.className = `msg ${role}`;
+
+    if (role === "assistant") {
+      const label = document.createElement("div");
+      label.className = "role-label";
+      label.textContent = "Assistant";
+      wrap.appendChild(label);
+    }
+    if (role === "user") {
+      const label = document.createElement("div");
+      label.className = "role-label";
+      label.textContent = "You";
+      wrap.appendChild(label);
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    scrollBottom();
+    return wrap;
+  }
+
+  function addTyping() {
+    hideEmpty();
+    const wrap = document.createElement("div");
+    wrap.className = "msg assistant";
+    wrap.id = "typing";
+    const label = document.createElement("div");
+    label.className = "role-label";
+    label.textContent = "Assistant";
+    wrap.appendChild(label);
+    const bubble = document.createElement("div");
+    bubble.className = "typing-bubble";
+    bubble.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const t = document.getElementById("typing");
+    if (t) t.remove();
+  }
+
+  function scrollBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  // ── Send ──
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text || isLoading) return;
+
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    sendBtn.disabled = true;
+    isLoading = true;
+
+    addMsg("user", text);
+    addTyping();
+
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // sends Cloudflare Access cookies
+        body: JSON.stringify({ message: text, history })
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (!res.ok || data.error) {
+        const errWrap = document.createElement("div");
+        errWrap.className = "msg error-msg";
+        const b = document.createElement("div");
+        b.className = "bubble";
+        b.textContent = data.error || "Something went wrong. Please try again.";
+        errWrap.appendChild(b);
+        messagesEl.appendChild(errWrap);
+      } else {
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: data.answer });
+        if (history.length > 16) history = history.slice(-16);
+        addMsg("assistant", data.answer);
+      }
+    } catch (err) {
+      removeTyping();
+      const errWrap = document.createElement("div");
+      errWrap.className = "msg error-msg";
+      const b = document.createElement("div");
+      b.className = "bubble";
+      b.textContent = "Connection error — please check your network and try again.";
+      errWrap.appendChild(b);
+      messagesEl.appendChild(errWrap);
+    }
+
+    isLoading = false;
+    sendBtn.disabled = !inputEl.value.trim();
+    scrollBottom();
+  }
+</script>
+</body>
+</html>
